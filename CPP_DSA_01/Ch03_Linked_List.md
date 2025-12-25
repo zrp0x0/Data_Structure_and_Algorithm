@@ -929,3 +929,195 @@ int main()
     return 0;
 }
 ```
+
+
+
+---
+# S04. std::list와 std::forward_list
+
+
+### 1. std::list
+- 이중 연결 리스트를 구현한 컨테이너
+```cpp
+template <class T, class Allocator = std::allocator<T>>
+class list;
+```
+
+- 어느 위치라도 원소의 삽입 또는 삭제를 상수 시간으로 처리: O(1)
+- 그러나 특정 위치에 곧바로 접근할 수 없음
+    - std::vector처럼 []연산자를 이용한 랜덤 엑세스는 지원 안 함
+    - begin(), end() 등의 함수로 얻은 반복자와 ++, -- 연산자로 위치 이동
+    - std::vector가 좀 더 효율적으로 동작하는 경우가 많고 실제로도 많이 사용함
+- <list>에 정의되어있음
+
+- 반복자 무효화의 안정성: 삽입하거나 삭제가 일어나도 다른 원소를 가리키는 반복자나 참조자가 무효화되지 않음
+- 메모리 오버헤드 발생: 앞/뒤 포인터 (최소 16바이트 오버헤드 발생)
+
+
+### 2. std::list의 주요 연산
+- front(), back()
+- begin(), cbegin(), rbegin(), crbegin(), end(), cend(), rend(), crend()
+- insert(), push_front(), push_back(), emplace(), emplace_front(), emplace_back()
+- clear(), erase(), pop_front(), pop_back()
+- splice(): 다른 리스트의 원소를 현재 리스트로 이동 / 현재 리스트 원소 증가 / 다른 리스트 원소 감소
+- remove(), remove_if(): 특정 값 / 조건 삭제
+- reverse(): 원소의 순서를 역순으로 변경
+- unique(): 중복 원소를 삭제 - **연속적일 경우에만** / 1 2 1 2 X / 1 1 2 2 O
+- sort(): 정렬 / std::sort 전역 함수로 정렬할 수 없으므로 따로 지원해줌
+- ...
+
+
+### 3. std::list 예제 코드
+```cpp
+#include <iostream>
+#include <list>
+
+using std::cout;
+using std::endl;
+using std::list;
+
+int main()
+{
+    list<int> l1;
+    l1.push_back(10); // 10
+    l1.push_front(20); // 20 10
+
+    list<int> l2 {10, 20, 30, 40};
+
+    for (auto a : l2)
+    {
+        cout << a << " ";
+    }
+    cout << endl;
+
+    //
+    l2.splice(l2.end(), l1); // l2 맨마지막 위치에 l1을 전부 다 붙여라 / l1은 원소가 없어짐
+    cout << "l1" << endl;
+    for (auto a : l1)
+    {
+        cout << a << " ";
+    }
+    cout << endl;
+
+    cout << "l2" << endl;
+    for (auto a : l2)
+    {
+        cout << a << " ";
+    }
+    cout << endl;
+
+    //
+    l2.sort();
+    cout << "l2 sort" << endl;
+    for (auto a : l2)
+    {
+        cout << a << " ";
+    }
+    cout << endl;
+
+    //
+    l2.unique();
+    cout << "l2 unique" << endl;
+    for (auto a : l2)
+    {
+        cout << a << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
+```
+
+
+### 4. std::forward_list
+- 단순 연결 리스트를 구현한 컨테이너
+```cpp
+template <class T, class Allocator = std::allocator<T>>
+class forward_list;
+```
+
+- begin() 함수로 (순방향) 반복자를 얻을 수 있고, 오직 ++연산만 사용 가능
+- std::list보다 빠르게 동작하고, 적은 메모리를 사용
+- C++11부터 지원
+- <forward_list>에 정의되어있음
+- 양방향을 굳이 사용하지 않을 것이면 forward_list 사용을 권장
+
+
+### 5. std::forward_list와 std::list 차이점
+- 맨 앞 원소만 참조할 수 있음
+- size() 함수를 지원해주지 않음 - 최소한의 오버헤드를 지향하기 때문!!
+- std::distance() 함수를 사용해서 원소 개수를 알 수 있음
+
+
+### 6. std::forward_list 예제 코드
+```cpp
+#include <iostream>
+#include <forward_list>
+
+using std::cout;
+using std::endl;
+using std::forward_list;
+
+int main()
+{
+    forward_list<int> l1 {10, 20, 30, 40};
+
+    l1.push_front(10);
+    l1.push_front(20);
+    l1.push_front(30); // 30 20 10 10 20 30 40
+
+    for (const auto& a : l1)
+    {
+        cout << a << " ";
+    }
+    cout << endl;
+
+    //
+    l1.remove(40);
+    for (const auto& a : l1)
+    {
+        cout << a << " ";
+    }
+    cout << endl;
+
+    //
+    l1.remove_if([](int n) { return n > 20; });
+    for (const auto& a : l1)
+    {
+        cout << a << " ";
+    }
+    cout << endl;
+
+
+    return 0;
+}
+```
+
+
+### 7. 추가 학습
+- vector vs list
+    - 캐시 지역성
+        - vector는 메모리가 연속적이라 캐시 효율이 매우 높음
+        - list는 캐시 미스가 빈번하게 발생하고, 이 때문에 O(1)이지만 실성능이 vector보다 느린 경우가 있음
+
+- sort
+    - std::sort는 임의 접근 반복자를 요구함 (vector, deque)
+    - list의 sort는 합병정렬 기반으로 구성 및 Stable Sort 수행
+
+- forward_list의 before_begin(): 맨 앞 노드보다도 이전 노드(포인터)
+    ```cpp
+    auto it = l1.before_begin();
+    l1.insert_after(it, 50); // 맨 앞에 50 삽입
+    ```
+    - 이거를 굳이 왜 사용하냐고 하면은
+    - insert_after은 해당 노드의 뒤에 넣는 것인데 만약 맨 앞에 추가해야되는 상황이 있다면
+    - 이 때 조건부로 push_front를 사용하면 되지만
+    - 코드의 일관성을 위해서 사용
+
+- splice의 핵심
+    - **복사하거나 이동이 아닌 노드의 포인터 연결만 바꿈**
+    - O(1) / 게임 서버에서 대기열 관리나 오브젝트 풀링할 때 매우 유용함
+
+- std::distance() 비용
+    - std::distance(l1.begin(), l1.end()) => O(N)
+    - vector / DoublyLinkedList의 size는 O(1)
