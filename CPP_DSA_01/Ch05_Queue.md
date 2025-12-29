@@ -214,3 +214,403 @@ int main()
     - queue는 앞의 원소를 가져올 수 있어야함
     - vector에서 pop_front는 O(N)의 시간이 걸림
     - queue의 pop_front(front)는 O(1)의 시간이 걸려야함
+
+
+
+---
+# S02. 환형 큐(Circular Queue)
+
+
+### 1. 배열을 이용한 큐의 구현
+- 크기가 8인 배열에 3개의 데이터가 추가된 큐의 상태
+    - [[front]10] [20] [[rear[30]]]
+
+```cpp
+template <typename T>
+class Queue
+{
+private:
+    T* arr;
+    int front;
+    int rear;
+    int count;
+    int capacity;
+}
+```
+
+- 큐에 새로운 데이터 추가하기 (enqueue(40))
+    - [[front]10] [20] [30] [[rear]]
+    - [[front]10] [20] [30] [[rear]40]
+
+```cpp
+void enqueue(const T& e)
+{
+    rear++;
+    arr[rear] = e;
+    count++;
+}
+```
+- 근데 이렇게 하면 Overflow가 발생할 수 있음!!
+
+```cpp
+void enqueue(const T& e)
+{
+    if (full())
+    {
+        cout << "Overflow Error!" << endl;
+        return;
+    }
+
+    rear++;
+    arr[rear] = e;
+    count++;
+}
+```
+- 배열이 가득 찾는지 확인해야함
+
+- 큐에서 데이터 삭제하기
+```cpp
+void dequeue()
+{
+    front++;
+    count--;
+}
+```
+- 만약 배열이 비어있다면 오류가 발생함
+
+```cpp
+void dequeue()
+{
+    if (empty())
+    {
+        cout << "Underflow Error!" << endl;
+        return;
+    }
+
+    front++;
+    count--;
+}
+```
+
+
+### 2. 배열을 이용한 큐의 구현에서 큐의 초기 상태
+- rear = -1
+- front = 0
+- rear을 1증가 시키고 데이터를 넣고
+- front에 있는 데이터를 꺼내고(안 꺼내도 되긴함) front를 1증가 시킴
+```cpp
+#define MAX_QUEUE 10
+
+Queue(int sz = MAX_QUEUE)
+{
+    arr = new T[sz];
+    front = 0;
+    rear = -1;
+    count = 0;
+    capacity = sz;
+}
+```
+
+
+### 3. 배열을 이용한 큐의 문제점
+- 큐에 데이터의 삽입과 삭제가 지속적으로 발생할 경우, **배열의 앞 부분에 무효화되는 공간이 늘어남**
+    - **rightward drift**
+    - [10] [20] [30] [40] [[front]50] [[rear]60]
+
+- 무효화되는 공간을 재사용하자!! => 환형 큐(원형 큐)
+
+
+### 4. 환형 큐 (Circular Queue)
+- 선입 선출 원칙에 따라 작업이 수행되고
+- 마지막 위치가 마치 원을 이루듯이 다시 첫 번째 위치에 연결되는 선형 데이터 구조
+- 큐의 front / rear가 시계 방향으로 한 칸씩 이동하는 상태
+    - 실제 구현에서는 배열 전체 크기를 이용하여 **나머지(%)** 연산을 수행
+- 큐가 empty() 또는 full() 상태인지를 확인하기 위해 원소의 개수를 따로 저장해야함
+
+
+### 5. 환형 큐에서 데이터 추가
+- full 검사
+- rear을 1증가하고 rear에 원소 추가
+
+
+### 6. 환형 큐에서 데이터 삭제
+- empty 검사
+- front에 있는 데이터 처리(삭제)
+- front를 1증가
+
+
+### 7. 환형 큐 구현
+```cpp
+#include <iostream>
+
+#define MAX_QUEUE 10
+
+using std::cout;
+using std::endl;
+
+template <typename T>
+class Circular_Queue
+{
+public:
+    Circular_Queue(int sz = MAX_QUEUE)
+    {
+        arr = new T[sz];
+        capacity = sz;
+        count = 0;
+        rear_idx = -1;
+        front_idx = 0;
+    }   
+
+    ~Circular_Queue()
+    {
+        delete[] arr;
+    }
+
+    void enqueue(const T& e)
+    {
+        if (full())
+        {
+            cout << "Overflow Error!" << endl;
+            return;
+        }   
+
+        rear_idx = (rear_idx + 1) % capacity;
+        arr[rear_idx] = e;
+        count++;
+    }
+
+    void dequeue()
+    {
+        if (empty())
+        {
+            cout << "Underflow Error!" << endl;
+            return;
+        }
+
+        front_idx = (front_idx + 1) % capacity;
+        count--;
+    }
+
+    const T& front()
+    {
+        if (empty())
+        {
+            cout << "Queue is Empty!" << endl;
+            return T();
+        }
+
+        return arr[front_idx];
+    }
+
+    bool full()
+    {
+        return count == capacity;
+    }
+
+    bool empty()
+    {
+        return count == 0;
+    }
+
+    int size()
+    {
+        return count;
+    }
+
+private:
+    T* arr;
+    int front_idx;
+    int rear_idx;
+    int count;
+    int capacity;
+};
+
+int main()
+{
+    Circular_Queue<int> cq;
+
+    cq.dequeue(); // Underflow Error
+    cq.enqueue(10); 
+    cq.enqueue(20);
+    cq.enqueue(30);
+    cq.enqueue(40);
+    cq.enqueue(50);
+    cq.enqueue(60);
+    cq.enqueue(70);
+    cq.enqueue(80);
+    cq.enqueue(90);
+    cq.enqueue(100);
+    cq.enqueue(999); // Overflow Error
+
+    cout << cq.front() << endl; // 10
+
+    cq.dequeue(); // 20 ~ 100
+    
+    while (!cq.empty())
+    {
+        cout << cq.front() << " "; // 20 ~ 100
+        cq.dequeue();
+    }
+    cout << endl;
+
+    return 0;
+}
+```
+
+
+### 8. 추가 내용
+- 환형 큐 구현에 있어서 count 변수 없이 구현
+    - 메모리를 조금이라도 더 아끼려면 count 변수를 없애고 구현할 수 있음
+    - 이때는 배열 전체의 한 칸을 검사를 위해서 남겨두는 방향으로 구현함
+    - empty: rear == front;
+    - full: (rear + 1) % (capacity + 1) == front;
+    ```cpp
+    #include <iostream>
+    using std::cout;
+    using std::endl;
+
+    class CircularQueue
+    {
+    public:
+        CircularQueue(int capacity)
+        {
+            _capacity = capacity;
+            _arr = new int[_capacity + 1];
+            _rear = 0;
+            _front = 0;
+        }
+
+        ~CircularQueue()
+        {
+            delete[] _arr;
+        }
+
+        void push(int e)
+        {
+            if (full())
+            {
+                cout << "Queue is Full!" << endl;
+                return;
+            }
+
+            _arr[_rear] = e;
+            _rear = (_rear + 1) % (_capacity + 1);
+        }
+
+        void pop()
+        {
+            if (empty())
+            {
+                cout << "Queue is Empty!" << endl;
+                return;
+            }
+
+            _front = (_front + 1) % (_capacity + 1);
+        }
+
+        int front()
+        {
+            if (empty())
+            {
+                cout << "Queue is Empty!" << endl;
+                return 0;
+            }
+
+            return _arr[_front];
+        }
+
+        bool empty()
+        {
+            return _rear == _front;   
+        }
+
+        bool full()
+        {
+            return ((_rear + 1) % (_capacity + 1)) == _front;
+        }
+
+    private:
+        int* _arr;
+        int _rear;
+        int _front;
+        int _capacity;
+    };
+
+    int main()
+    {
+        CircularQueue cq(5);
+        cq.push(1);
+        cq.push(2);
+        cq.push(3);
+        cq.push(4);
+        cq.push(5); // 1 2 3 4 5
+        cq.push(6); // Queue is Full!
+
+        cq.pop(); // 2 3 4 5
+
+        while (!cq.empty())
+        {
+            cout << cq.front() << " "; // 2 3 4 5
+            cq.pop();
+        }
+        cout << endl;
+
+        return 0;
+    }
+    ```
+
+- enqueue / dequeue / front의 시간 복잡도는 O(1)
+
+
+- 엄밀한 환형 큐
+```cpp
+#include <iostream>
+#include <stdexcept> // 예외 처리를 위해 추가
+
+template <typename T>
+class Circular_Queue {
+public:
+    explicit Circular_Queue(size_t sz = 10) : capacity(sz), count(0), front_idx(0), rear_idx(sz - 1) {
+        arr = new T[capacity];
+    }
+
+    ~Circular_Queue() {
+        delete[] arr;
+    }
+
+    // 복사 방지 (엄밀성 추가)
+    Circular_Queue(const Circular_Queue&) = delete;
+    Circular_Queue& operator=(const Circular_Queue&) = delete;
+
+    void enqueue(const T& e) {
+        if (full()) throw std::overflow_error("Queue Overflow");
+
+        rear_idx = (rear_idx + 1) % capacity;
+        arr[rear_idx] = e;
+        count++;
+    }
+
+    void dequeue() {
+        if (empty()) throw std::underflow_error("Queue Underflow");
+
+        front_idx = (front_idx + 1) % capacity;
+        count--;
+    }
+
+    const T& front() const { // 읽기 전용 const 추가
+        if (empty()) throw std::out_of_range("Queue is Empty");
+        return arr[front_idx];
+    }
+
+    bool full() const { return count == capacity; }
+    bool empty() const { return count == 0; }
+    size_t size() const { return count; }
+
+private:
+    T* arr;
+    size_t front_idx;
+    size_t rear_idx;
+    size_t count;
+    size_t capacity;
+};
+```
