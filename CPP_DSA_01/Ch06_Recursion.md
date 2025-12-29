@@ -143,3 +143,58 @@ int main()
 - 재귀 vs 스택 자료구조
     - 재귀는 일정 수준 이상 깊어지면 스택 오버플로우가 발생할 수 있음
     - 차라리 스택 자료구조를 사용하는 방법을 고려해볼 수 있음
+    ```cpp
+    #include <iostream>
+    #include <stack>
+    #include <vector>
+    
+    using namespace std;
+    
+    // 1. 재귀 방식 (Recursive Approach)
+    // n이 커지면 시스템 콜 스택이 꽉 차서 프로그램이 터짐 (Stack Overflow)
+    void recursive_depth(int n) {
+        if (n <= 0) return;
+        
+        // 실제 작업 수행 (생략)
+        
+        recursive_depth(n - 1); // 다음 호출을 스택 프레임에 계속 쌓음
+    }
+    
+    // 2. 명시적 스택 방식 (Explicit Stack Approach)
+    // 데이터를 힙 영역에 생성된 std::stack에 저장하므로 메모리 한계가 거의 없음
+    void stack_depth(int n) {
+        stack<int> s;
+        s.push(n);
+    
+        while (!s.empty()) {
+            int curr = s.top();
+            s.pop();
+    
+            if (curr <= 0) continue;
+    
+            // 실제 작업 수행 (생략)
+    
+            // 다음 작업을 스택에 직접 넣음 (함수 호출이 아님!)
+            s.push(curr - 1); 
+        }
+    }
+    
+    int main() {
+        int big_n = 1000000; // 100만 번의 깊이
+    
+        cout << "--- 명시적 스택 방식 시작 ---" << endl;
+        try {
+            stack_depth(big_n);
+            cout << "명시적 스택 방식 완료!" << endl;
+        } catch (...) {
+            cout << "명시적 스택 방식 실패" << endl;
+        }
+    
+        cout << "\n--- 재귀 방식 시작 (주의: 터질 수 있음) ---" << endl;
+        // 대부분의 환경에서 100만 번 재귀는 Stack Overflow를 일으킴
+        recursive_depth(big_n); 
+        cout << "재귀 방식 완료!" << endl; 
+    
+        return 0;
+    }
+    ```
