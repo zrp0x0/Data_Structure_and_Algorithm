@@ -143,58 +143,223 @@ int main()
 - 재귀 vs 스택 자료구조
     - 재귀는 일정 수준 이상 깊어지면 스택 오버플로우가 발생할 수 있음
     - 차라리 스택 자료구조를 사용하는 방법을 고려해볼 수 있음
-    ```cpp
-    #include <iostream>
-    #include <stack>
-    #include <vector>
-    
-    using namespace std;
-    
-    // 1. 재귀 방식 (Recursive Approach)
-    // n이 커지면 시스템 콜 스택이 꽉 차서 프로그램이 터짐 (Stack Overflow)
-    void recursive_depth(int n) {
-        if (n <= 0) return;
-        
-        // 실제 작업 수행 (생략)
-        
-        recursive_depth(n - 1); // 다음 호출을 스택 프레임에 계속 쌓음
+
+
+
+---
+# S02. 재귀 알고리즘 주요 예제 01
+
+
+### 1. 팩토리얼(factorial, 계승)
+- 20보다 같거나 작은 자연수 N이 입력으로 주어질 경우, 1 * 2 * 3 .. * (N - 1) * N을 계산하는 팩토리얼 함수를 작성하시오
+- 20보다 작은 자연수일 이유: int 자료형으로는 안됨 (-21억 ~ 21억 사이)
+```cpp
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
+long long factorial(int n)
+{
+    if (n <= 0)
+        return 1;
+
+    return n * factorial(n - 1);
+}
+
+int main()
+{
+    cout << factorial(5) << endl;
+    cout << factorial(10) << endl;
+    cout << factorial(20) << endl; // 243290200817664000
+
+    return 0;
+}
+```
+
+
+### 2. 피보나치 수(Fibonacci numbers)
+- 첫째 및 둘째 항이 1이며 그 뒤의 모든 항은 바로 앞 두 항의 합인 수열
+    - 1 1 2 3 5 8 13 21 ...
+- 편의상 0번째 항을 0으로 설정하기도 함
+    - f(0) = 0
+    - f(1) = 1
+    - f(n) = f(n - 2) + f(n - 1) | (n > 1)
+```cpp
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
+long long fibonacci(int n)
+{
+    if (n <= 1)
+        return n;
+
+    else
+        return fibonacci(n - 2) + fibonacci(n - 1);
+}
+
+int main()
+{
+    for (int i = 1; i <= 10; i++)
+    {
+        cout << fibonacci(i) << " ";
     }
-    
-    // 2. 명시적 스택 방식 (Explicit Stack Approach)
-    // 데이터를 힙 영역에 생성된 std::stack에 저장하므로 메모리 한계가 거의 없음
-    void stack_depth(int n) {
-        stack<int> s;
-        s.push(n);
-    
-        while (!s.empty()) {
-            int curr = s.top();
-            s.pop();
-    
-            if (curr <= 0) continue;
-    
-            // 실제 작업 수행 (생략)
-    
-            // 다음 작업을 스택에 직접 넣음 (함수 호출이 아님!)
-            s.push(curr - 1); 
-        }
-    }
-    
-    int main() {
-        int big_n = 1000000; // 100만 번의 깊이
-    
-        cout << "--- 명시적 스택 방식 시작 ---" << endl;
-        try {
-            stack_depth(big_n);
-            cout << "명시적 스택 방식 완료!" << endl;
-        } catch (...) {
-            cout << "명시적 스택 방식 실패" << endl;
-        }
-    
-        cout << "\n--- 재귀 방식 시작 (주의: 터질 수 있음) ---" << endl;
-        // 대부분의 환경에서 100만 번 재귀는 Stack Overflow를 일으킴
-        recursive_depth(big_n); 
-        cout << "재귀 방식 완료!" << endl; 
-    
-        return 0;
-    }
-    ```
+    cout << endl;
+    // 직접 계산 5
+    // - 3 4
+    // - 1 2 / 2 3
+    // - 1 / 0 1 / 0 1 / 1 2
+    // - 1 / 0 1 / 0 1 / 1 / 0 1
+
+    return 0;
+}
+```
+
+
+### 3. 재귀에 의한 피보나치 수 계산 문제점
+- 중복되는 부분 문제(overlapping subproblem)로 인해 계산 효율이 떨어짐
+- fibonacci(50): 1분 정도 걸림
+    - F(5) - F(4) / F(3) - F(3), F(2) / F(2), F(1)
+    - 위와 같이 F(N)이 중복되는 현상이 발생함
+- 캐시를 사용하여 문제를 해결할 수 있음
+    - 이전에 계산된 F(N)을 계산할 수 있음 => **동적 계획법**
+
+
+### 4. 문자열 뒤집기
+- 문자열의 각 문자 순서를 역순으로 변경
+- 1. 두 번째 문자부터 시작하는 부분 문자열을 뒤집어 변환
+- 2. 1에서 반환된 문자열 뒤에 첫 번째 문자를 추가
+```cpp
+#include <iostream>
+#include <string>
+
+using std::cout;
+using std::endl;
+using std::string;
+
+string reverse(const string& str)
+{
+    if (str.length() == 0)
+        return "";
+    else
+        return reverse(str.substr(1)) + str[0];
+}
+
+int main()
+{
+    cout << reverse("Hello") << endl;
+
+    return 0;
+}
+```
+
+
+### 5. 최대 공약수 (greatest common divisor)
+- gcd(a, b): 두 개의 자연수 a와 b가 있을 때, a와 b 모두 약수 중에서 가장 큰 정수
+- 유클리드 알고리즘을 이용하여 재귀적으로 구할 수 있음
+    - a | if b = 0
+    - gcd(b, a % b) | otherwise
+
+- 유클리드 알고리즘 예:
+    - gcd(24, 18)
+    - gcd(18, 6)
+    - gcd(6, 0)
+    - "6"
+
+```cpp
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
+int gcd(int a, int b)
+{
+    if (b == 0)
+        return a;
+
+    else   
+        return gcd(b, a % b);
+}
+
+int main()
+{
+    cout << gcd(24, 18) << endl;
+
+    return 0;
+}
+```
+
+
+### 6. 최소 공배수(lowest common multiple)
+- lcm(a, b): 두 정수 a와 b가 있을 때, a와 b로 모두 나누어 떨어지는 가장 작은 정수
+- 두 정수의 곱은 두 정수의 최대 공약수와 최소 공배수의 곱과 같다는 성질을 이용하여 구할 수 있음
+    - a * b = gcd(a, b) * lcm(a, b)
+    - lcm(a, b) = (a * b) / gcd(a, b)
+
+```cpp
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
+int gcd(int a, int b)
+{
+    if (b == 0)
+        return a;
+    else
+        return gcd(b, a % b);
+}
+
+int lcm(int a, int b)
+{
+    return (a * b) / gcd(a, b);
+}
+
+int main()
+{
+    cout << lcm(3, 6) << endl;
+
+    return 0;
+}
+```
+
+
+### 7. C++ 최대 공약수 & 최소 공배수 계산 함수
+```cpp
+template <class M, class N>
+constexpr std::common_type_t<M, N> gcd(M n, N n);
+
+template <class M, class N>
+constexpr std::commom_type_t<M, N> lcm(M m, N n);
+```
+
+- C++ 17 지원
+- <numeric>에 정의되어 있음
+
+```cpp
+#include <iostream>
+#include <numeric>
+
+int main()
+{   
+    std::cout << std::gcd(10, 15) << std::endl;
+    std::cout << std::lcm(10, 15) << std::endl;
+
+    return 0;
+}
+```
+
+
+### 8. 추가 내용
+- 최소 공배수의 오버플로우 트랩
+    - (a * b) / gcd(a, b)를 할 경우 a * b에서 오버플로우가 발생할 수도 있음
+    - (a / gcd(a, b)) * b 순서로 하는 것이 좋음
+
+
+---
+# S03. 재귀 알고리즘 주요 예제 02
+
+
+### 1. 
