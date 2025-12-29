@@ -362,4 +362,178 @@ int main()
 # S03. 재귀 알고리즘 주요 예제 02
 
 
-### 1. 
+### 1. 순열(permutation)
+- n개의 원소로 구성된 집합이 있을 경우, 모든 원소를 서로 다른 순서로 나열하는 순열 방법을 모두 출력하시오
+- **n!개**
+
+
+### 2. 순열과 재귀의 관게
+- {a, b, c, d}의 모든 순열
+    - a로 시작하고 나머지 3개의 모든 순열
+    - b로 시작하고 나머지 3개의 모든 순열
+    - c로 시작하고 나머지 3개의 모든 순열
+    - d로 시작하고 나머지 3개의 모든 순열
+        - a로 시작..
+        - b로 시작..
+        - c로 시작..
+
+
+### 3. 순열 재귀 함수 구현 방법
+- 1. 첫 번째 원소를 모든 원소와 각각 맞바꾸기(swap)
+- 2. 첫 번째 원소를 제외한 나머지 원소들의 집합으로 순열 구하기
+- 위 과정을 잘 반복하기
+
+
+### 4. 순열 재귀 함수 구현 코드
+```cpp
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+template <class T>
+void print_vector(const vector<T>& vec)
+{
+    for (const auto& e : vec)
+    {
+        cout << e << " ";
+    }
+    cout << endl;
+}
+
+void permutation(vector<int>& vec, int k)
+{
+    if (k == vec.size() - 1)
+    {
+        print_vector(vec);
+        return;
+    }
+
+    for (int i = k; i < vec.size(); i++)
+    {
+        swap(vec[k], vec[i]);
+        permutation(vec, k + 1);
+        swap(vec[k], vec[i]);
+    }
+}
+
+int main()
+{
+    vector<int> vec {1, 2, 3, 4};
+    permutation(vec, 0);
+
+    cout << "============" << endl;
+
+    sort(vec.begin(), vec.end());
+    do 
+    {
+        print_vector(vec);
+
+    } while (next_permutation(vec.begin(), vec.end()));
+
+    return 0;
+}
+```
+
+- 순서 원복을 하는 이유
+    - 순서를 바꾸고 재쥐적으로 호출을 하는 것이기 때문에
+    - 다시 바꿔주지 않으면 의도치 않게 동작함
+        
+
+### 5. C++ 순열 구하기 함수
+```cpp
+template <class BidirIt>
+bool next_permutation(BidirIt first, BidirIt last);
+```
+
+- 주어진 시퀀스를 사전순으로 다음에 나오는 순열로 변환
+- **정렬된 시퀀스**로 호출하기 시작해야함
+- <algorithm>에 정의되어 있음
+```cpp
+std::vector<int> vec {1, 2, 2, 4};
+std::sort(vec.begin(), vec.end());
+
+do 
+{
+    for (int a : vec)
+        cout << a << " ";
+    cout << endl;
+} while (std::next_permutation(vec.begin(), vec.end()));
+```
+
+- 반드시 **오름차순**으로 정렬을 하고 사용해야함
+
+
+### 6. 하노이의 탑
+- 퍼즐의 일종
+- 세 개의 기둥과 이 기둥에 꽂을 수 있는 크기가 당야한 원판들이 있고, 처음에는 하나의 기둥에 원판들이 작은 것이 위에 있도록 순서대로 쌓여 있음
+- 다음 조건을 만족시키면서 원판들을 다른 기둥으로 옮겨서 다시 쌓아야 함
+    - 1. 한 번에 하나의 원판만 옮길 수 있음
+    - 2. 기둥의 맨 위에 있는 원판을 다른 기둥의 맨 위로 옮길 수 있음
+    - 3. 큰 원판이 작은 원판 위에 있어서는 안됨
+
+
+### 7. 하노이 탑 이동 순서 구하기
+- 하노이 탑의 세 기둥을 차례대로 1번 2번 3번이라고 할 경우, 처음에 1번 기둥에 n개의 원판이 있음
+- n은 15이하의 자연수이며, 입력으로 주어짐
+- 1번 기둥은 모든 원판을 3번 기둥으로 최소 횟수로 옮기는 방법을 출력하시오
+
+- 입출력 예
+    - n=2 | 1->2, 1->3, 2->3
+    - n=3 | 1->3, 1->2, 3->2, 1->3, 2->1, 2->3, 1->3
+
+    - 2^n - 1만큼의 이동이 최소 움직임
+
+
+### 8. 하노이 탑 재귀 관계 분석
+```cpp
+[from] [by] [to]
+
+hanoi(n, from, to, by)
+
+if n == 1:
+    from에서 to로 원판 이동
+otherwise:
+    hanoi(n - 1, from, by, to)
+    from에 있는 원판 한개를 to로 원판 이동
+    hanoi(n - 1, by, to, from)
+```
+
+
+### 9. 하노이 탑 실제 코드 구현
+```cpp
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
+void hanoi(int n, int from, int to, int by)
+{
+    if (n == 1)
+    {
+        cout << from << "=>" << to << endl;
+    }
+    else{
+        hanoi(n - 1, from, by, to);
+        cout << from << "=>" << to << endl;
+        hanoi(n - 1, by, to, from);
+    }
+}
+
+int main()
+{
+    hanoi(2, 1, 3, 2);
+
+    return 0;
+}
+```
+
+
+### 10. 추가 내용
+- 사전식 순서
+    - 따로 작성한 permutaion 함수는 출력되는 순서가 **사전식**이 아님
+    - std::next_permutation은 현재 상태에서 사전순으로 바로 다음 순열을 찾음
+        - 그래서 오름차순 정렬이 되어있어야함!!
+
+- 하노이 탑의 시간 복잡도: O(2^N)으로 매우 무거운 알고리즘!!
