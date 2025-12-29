@@ -614,3 +614,116 @@ private:
     size_t capacity;
 };
 ```
+
+
+
+---
+# Ch03. 양방향 큐와 std::deque
+
+
+### 1. 양방향 큐(deque)란?
+- deque: Double Ended Queue
+- **삽입과 삭제**가 **양쪽** 끝에서 모두 가능한 자료 구조
+    - push_front
+    - pop_front
+    - push_back
+    - pop_back
+
+
+### 2. 양방향 큐의 주요 연산
+- push_front(e)
+- pop_front()
+
+- push_back(e)
+- pop_back()
+
+- front()
+- back()
+
+- empty()
+- size()
+
+
+### 3. 배열을 이용한 양방향 큐 구현
+- 환형 큐와 비슷한 방식으로 양방향 큐의 맨 앞과 맨 마지막 위치를 갱신
+- 만약 인덱스를 벗어난다면 맨 뒤 혹은 앞으로 이동시키고 거기에 넣으면 됨
+```cpp
+과제
+```
+
+
+### 4. 연결 리스트를 이용한 양방향 큐 구현
+- 이중 연결 리스트를 이용하여 연결 리스트의 맨 앞과 맨 뒤에 자료를 각각 추가/삭제 가능
+- 
+```cpp
+과제
+```
+
+
+### 5. std::deque
+```cpp
+template <class T, class Allocator = std::allocator<T>>
+class deque;
+```
+
+- 양 방향 큐의 동작을 지원하는 **순차 컨테이너**
+- <dequeue>에 정의되어 있음
+- 특징
+    - **원소에 대해 임의 접근 동작이 O(1) 시간 복잡도로 동작**
+    - 맨 앞과 맨 뒤에 자료를 추가 또는 삭제하는 연산이 O(1) 시간 복잡도로 동작
+    - 중간 위치에 자료를 삽입 또는 삭제는 O(N) 시간 복잡도로 동작
+    - std::stack, std::queue등의 STL 컨테이너 어댑터의 기본 컨테이너로 사용
+
+
+### 6. std::deque의 구현 방식
+- C++ 표준은 어떤 기능의 동작만을 정의할 뿐이며, 어떻게 구현해야하는지는 정의하지 않음
+- 보통 std::deque는 단일 메모리 청크(chunk)를 사용하지 않으며, 대신 크기가 같은 여러 개의 메모리 청크를 사용하여 데이터를 저장함
+
+
+### 7. std::deque 사용 예제
+```cpp
+#include <iostream>
+#include <deque>
+
+using namespace std;
+
+int main()
+{
+    deque<int> dq = {10, 20, 30, 40};
+
+    dq.push_front(50);
+    dq.push_back(0);
+
+    cout << dq.front() << endl;
+    cout << dq.back() << endl;
+
+    dq.pop_back();
+    dq.pop_front();
+
+    dq[dq.size() - 1 - 1] = 999; 
+
+    for (int i = 0; i < dq.size(); i++)
+    {
+        cout << dq[i] << " "; // 임의 접근 지원함
+    }
+    cout << endl;
+
+    return 0;
+}
+```
+
+
+### 8. 추가 내용
+- std::deque의 임의 접근 O(1)의 진실
+    - 불연속적인 청크 단위인데 어떻게 상수 시간에 접근이 가능할까?
+    - dq[i]: (블록 번호 = i / 블록 크기) / (블록 내 인덱스 = i % 블록 크기)를 계산하여 바로 접근함
+    - 예. 블록 크기 == 4 / dq[18] 
+        - 18 / 4 == 4(블록 번호)
+        - 18 % 4 == 2(블록 인덱스)
+        - 주의 블록 번호/인덱스는 0부터 시작
+
+- vector vs deque의 메모리 연속성
+    - vector는 모든 원소가 연속으로 있음
+    - deque는 청크 안에서는 연속이지만 청크 자체는 불연속적임
+    - 포인터 연산으로 순회하는 것은 vector가 더 빠를 수 있음
+    - 왜냐하면 deque는 청크를 넘어가는 경우 다음 청크의 주소를 계산해야하기 때문임
