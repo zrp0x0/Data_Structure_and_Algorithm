@@ -612,3 +612,263 @@ int main()
 - Successor vs Predecessor
     - 삭제 시 반드시 후속 노드를 사용해야하는 것은 아님
     - 트리의 균형을 맞추기 위해 두 방식을 번갈아 가면서 사용하기도 함
+
+
+
+---
+# S03. std::set과 std::map
+
+
+### 1. C++ STL 컨테이너
+- 순차 컨테이너(sequence containers)
+    - vector, array, deque, list, forward_list
+
+- 연관 컨테이너(associative containers)
+    - set, multiset, map, multimap
+
+- 순서 없는 연관 컨테이너(unordered associative containers) (hash라는 기법을 사용함)
+    - unordered_set, unordered_multiset, unordered_map, unordered_multimap
+
+- 컨테이너 어댑터(container adaptors)
+    - stack, queue, priority_queue
+
+
+### 2. set과 map 차이
+- set은 키만 저장
+- map은 키와 값을 저장
+
+
+### 3. set과 multiset 차이
+- set은 고유한 키의 데이터만 저장(중복 허용 안함)
+- multiset은 중복되는 데이터를 저장
+
+
+### 4. set과 unordered_set 차이
+- set은 내부에서 데이터를 정렬해서 저장
+- unordered_set은 데이터를 정렬하지 않음
+
+
+### 5. std::set
+```cpp
+template<class Key, class Compare = std::less<Key>, class Allocator = std::allocator<Key>>
+class set;
+```
+
+- Key 타입의 키 값을 저장하는 연관 컨테이너
+- 저장된 데이터는 키 값을 기준으로 정렬됨(오름차순)
+- 데이터 삽입, 삭제, 탐색은 O(log N) 시간 복잡도로 동작
+- std::set은 보통 레드 블랙 트리를 이용하여 구현됨
+- 만약 중복되는 데이터를 set 구조로 저장하려면 std::multiset 컨테이너를 사용
+- 만약 데이터를 정렬되지 않은 상태로 정장하려면 std::unordered_set 컨테이너를 사용
+- 사용자 정의 타입을 저장할 경우, 비교 연산을 지원해야함
+- <set>에 정의되어 있음
+
+
+### 6. std::set 주요 멤버 함수와 설명
+- begin(), end(), rbegin(), rend(): 순방향 및 역방향 반복자 반환
+- insert(): 중복되지 않는 새로운 원소를 삽입(이미 있는 경우 함수가 그대로 반환됨) / emplace()
+- erase(): 특정 원소를 삭제
+- find(): 특정 키 값을 갖는 원소를 찾아 반복자를 반환. 원소를 끝까지 찾지 못하게 end()에 해당하는 반복자를 반환. 원소를 찾지 못하며 맨 마지막 원소 다음 반복자를 반환함
+    - find() == end(): 해당 원소가 없다는 의미
+    - C++ 20: contains()
+
+- clear(): 모든 원소를 삭제
+- size(): 원소의 개수를 반환
+- empty(): set이 비어 있으면 true를 반환
+
+
+### 7. std::set 사용 예제
+```cpp
+#include <iostream>
+#include <string>
+#include <set>
+
+using namespace std;
+
+int main()
+{
+    set<int> odds;
+    odds.insert(1);
+    odds.insert(7);
+    odds.insert(5);
+    odds.insert(3);
+    odds.insert(9);
+    // 내부적으로 오름 차순 형태로 정렬된 상태로 저장됨
+
+    for (auto n : odds)
+    {
+        cout << n << " ";
+    }
+    cout << endl;
+
+    // set<int> odds2 {1, 7, 5, 3, 9};
+
+    set<int, greater<>> evens {2, 4, 6, 8}; // 내림차순 정렬: greater<>
+    evens.insert(10);
+    evens.insert(2); // 그냥 무시됨
+
+    if (evens.find(5) != evens.end())
+    {
+        cout << "4 is found" << endl;
+    }
+    else
+    {
+        cout << "4 is not found" << endl;
+    }
+
+
+    for (auto n : evens)
+    {
+        cout << n << " ";
+    }
+    cout << endl;
+
+    using psi = pair<string, int>;
+
+    // struct psi
+    // {
+    //     string first;
+    //     int second;
+    // }; // 이헐게 하면 크기 비교를 할 수 없음 / 부등호 연산자 오버로딩 함수를 따로 작성해주어야함!!
+    
+    // 복합적인 자료형 저장
+    // set<pair<string, int>> managers {{"Amelia", 29}, {"Noah", 25}, {"Olivia", 31}};
+    set<psi> managers {{"Amelia", 29}, {"Noah", 25}, {"Olivia", 31}};
+    managers.insert({"George", 35});
+    // managers.insert(make_pair("George", 35));
+
+    psi person1 {"Noah", 25};
+    if (managers.find(person1) != managers.end())
+    {
+        cout << "Found" << endl;
+    }
+    else
+    {
+        cout << "Not Found" << endl;
+    }
+
+    managers.erase({"Sophia", 40});
+    psi person2 {"Noah", 25};
+    managers.erase(person2);
+
+    for (const auto& m : managers)
+    {
+        cout << m.first << "(" << m.second << ")" << endl;
+    }
+    cout << endl;
+
+    return 0;
+}
+```
+
+
+### 8. std::map
+```cpp
+template<class Key, class T, class Compare = std::less<Key>>, class Allocator = std::allocator<std::pair<const Key, T>>>
+class map;
+```
+
+- Key 타입의 키(key)와 T 타입의 값(value)의 쌍(pair)을 저장하는 연관 컨테이너
+- 저장된 데이터는 키 값을 기준으로 정렬됨
+- 데이터 삽입, 삭제, 탐색은 O(log N) 시간 복잡도로 동작
+- std::map은 보통 레드 블랙 트리를 이용하여 구현됨
+- 만약 중복되는 데이터를 map 구조로 저장하려면 std::multimap 컨테이너를 사용
+- 만약 데이터를 정렬되지 않은 상태로 저장하려면 std::unordered_map 컨테이너를 사용
+- **사용자 정의 타입을 저장할 경우, 비교 연산을 지원해야함**
+- <map>에 정의되어 있음
+
+
+### 9. std::map 주요 멤버 함수와 설명
+- begin(), end(), rbegin(), rend(): 순방향 및 역방향 반복자 반환
+- insert(): (중복되지 않는) 새로운 원소를 삽입 / emplace()
+- erase(): 특정 원소를 삭제
+- operator[]: 특정 키에 해당하는 원소의 값을 **참조**로 반환. 해당 키의 원소가 없으면 새로운 원소를 기본값으로 생성하여 참조를 반환 / at()
+    - [Key] = value
+    - 원소 삽입으로도 사용. 해당 키가 없으면 기본 값으로 생성해서 **그 참조를 반환함**
+
+- find(): 특정 키 값을 갖는 원소를 찾아 반복자를 반환. 원소를 끝까지 찾지 못하면 end()에 해당하는 반복자를 반환 / contains()
+- clear(): 모든 원소를 삭제
+- size(): 원소의 개수를 반환
+- empty(): map이 비어 있으면 true를 반환
+
+
+### 10. std::map 주요 예제
+```cpp
+#include <iostream>
+#include <string>
+#include <map>
+
+using namespace std;
+
+int main()
+{
+    map<string, int> fruits;
+    fruits.insert({"Apple", 1000});
+    fruits.insert(make_pair("Banana", 1500));
+    cout << fruits["Apple"] << endl; // Key에 해당하는 Value로 치환됨
+    fruits["orange"]; // orange라는 Key가 생성되고 기본 생성자로 초기화됨
+    fruits["orange"] = 3000; // 변경도 가능
+
+    for (const auto& p : fruits)
+    {
+        cout << p.first << " is " << p.second << " won." << endl;
+    }
+
+    if (fruits.find("Apple") != fruits.end())
+    {
+        cout << "Found" << endl;
+    }
+    else
+    {
+        cout << "Not Found" << endl;
+    }
+
+    if (fruits.find("Appl") != fruits.end())
+    {
+        cout << "Found" << endl;
+    }
+    else
+    {
+        cout << "Not Found" << endl;
+    }
+
+    fruits.erase("Apple");
+    for (const auto& p : fruits)
+    {
+        cout << p.first << " is " << p.second << " won." << endl;
+    }
+
+    for (auto [name, price] : fruits) // auto 및 구조적 바인딩 C++ 17부터 지원
+    {
+        cout << name << " is " << price << "won." << endl; 
+    }
+
+    return 0;
+}   
+```
+
+
+### 11. 추가 내용
+- std::map의 operator[]의 부수 효과
+    - 존재하지 않는 키를 조회만 해도, 기본값으로 원소를 생성해버림
+    - .at(): 키가 없으면 예외를 던짐
+    - .find(): 키가 없으면 end() 반복자 반환
+
+- insert()은 std::pair<iterator, bool>을 반환함
+    - auto[it, success] = odds.insert(5);
+    - if (!success) cout << "이미 존재하는 값입니다." << endl;
+        - first: 삽입된 원소(또는 이미 있던 원소)를 가리키는 반복자
+        - second: 삽입 성공 여부 bool
+
+- std::map vs std::unordered_map
+    - 내부 구조: 레드블랙트리 vs 해시테이블
+    - 시간 복잡도: O(log N) vs 평균 O(1) 최악 O(N)
+    - 사용: 데이터 정렬이 필요할 때 vs 정렬보다 빠른 탐색이 중요할 때
+
+- 실무적 조언
+    - map에서는 operator[]보다 find()를 쓰는 습관을 기르자!!
+    - size() 함수는 C++이후부터 O(1) 안심하고 사용해도 됨!!
+
+- set/map/multi_... vs unordered_set/map/multi_...
+    - 전자는 레드블랙트리
+    - 후자는 해시테이블
