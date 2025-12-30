@@ -315,3 +315,300 @@ int main()
     - 아니오!!
     - 트리가 편향되면 성능이 최악의 경우 O(N)!!
     - 이를 해결하기위해서 Balanced BST가 등장함
+
+
+
+---
+# S02. 이진 탐색 트리 02
+
+
+### 1. 이진 탐색 트리에서 삭제
+- 이진 탐색 트리에서 자료의 삭제는 해당 노드를 살제한 후, BST 속성을 만족할 수 있는 다른 적절한 노드를 찾아 해당 노드로 대체해야함
+    - 자식 노드가 없는 경우: 해당 노드를 삭제하고 링크를 제거
+    - 자식 노드가 하나만 있는 경우: 해당 노드를 삭제하고, 부모 노드의 포인터가 해당 노드의 자식 노드를 가리키도록 설정
+    - 자식 노드가 두 개 있는 경우: 후속 노드의 값을 현재 노드로 복사하고, 후속 노드를 삭제
+        - 후속 노드(successor): 현재 노드 다음으로 큰 숫자를 가진 노드(현재 노드의 오른쪽 서브 트리에서 가장 작은 값의 노드)
+            - 후속 노드는 자식이 없거나 또는 오른쪽 자식만 있음
+                - 1. 그냥 삭제 후 올리거나
+                - 2. 오른쪽 자식 노드가 있을 경우 그 또한 후속 노드의 위치로 이동해주어야함
+        - predecessor: 현재 노드 다음으로 작은 숫자를 가진 노드 (현재 노드의 왼쪽 서브 트리에서 가장 큰 값의 노드)
+
+
+### 2. 이진 탐색 트리 구현하기 - 삭제 함수
+```cpp
+class BinarySearchTree
+{
+private:
+    Node* root = nullptr;
+
+public:
+    void erase(int value)
+    {
+        root = erase_impl(root, value);
+    }
+
+private:
+    // 노드 삭제 후, 부모 노드 포인터가 가리켜야할 노드의 주소를 반환해야 함
+    Node* erase_impl(Node* node, int value)
+    {
+        if (!node)
+            return nullptr;
+
+        if (value < node->data)
+            node->left = erase_impl(node->left, value);
+        else if (value > node->data)
+            node->right = erase_impl(node->right, value);
+        else // value == node->data
+        {
+            if (node->left && node->right) 
+            {
+                // 자식 노드가 둘 다 있는 경우
+                auto succ = successor(node);
+                node->data = succ->data;
+                node->right = erase_impl(node->right, succ->data);
+            }
+            else
+            {
+                // 자식 노드가 전혀 없거나 한쪽 자식만 있는 경우
+                auto tmp = node->left ? node->left : node->right;
+
+                delete node;
+                return tmp;
+            }
+        }
+        
+        return node;
+    }
+}
+```
+
+
+### 3. 이진 탐색 트리 구현하기 - 후속 노드 찾기
+```cpp
+class BinarySearchTree
+{
+private:
+    Node* successor(Node* node)
+    {
+        auto curr = node->right;
+        while (curr && curr->left)
+            curr = curr->left;
+        return curr;
+    }
+}
+```
+
+
+### 4. 이진 탐색 트리 구현 클래스 테스트 코드 - 삭제 함수 추가 버전
+```cpp
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
+struct Node
+{
+    int data;
+    Node* left;
+    Node* right;
+
+    Node(int data) : data(data), left(nullptr), right(nullptr) {}
+};
+
+class BinarySearchTree
+{
+private:
+    Node* root = nullptr;
+
+public:
+    ~BinarySearchTree()
+    {
+        delete_node(root);
+    }
+
+    void insert(int value)
+    {
+        if (!root)
+            root = new Node(value);
+        else
+            insert_impl(root, value);
+    }
+
+    Node* find(int value)
+    {
+        return find_impl(root, value);
+    }
+
+    // 삭제
+    void erase(int value)
+    {
+        root = erase_impl(root, value);
+    }
+
+    void inorder()
+    {
+        inorder_impl(root);
+    }
+
+private:
+    void insert_impl(Node* curr, int value)
+    {
+        if (value < curr->data)
+        {
+            if (!curr->left)
+                curr->left = new Node(value);
+            else
+                insert_impl(curr->left, value);
+        }
+        else
+        {
+            if (!curr->right)
+                curr->right = new Node(value);
+            else
+                insert_impl(curr->right, value);
+        }
+    }   
+
+    Node* find_impl(Node* curr, int value)
+    {
+        if (curr == nullptr)
+            return nullptr;
+
+        if (value == curr->data)
+            return curr;
+        else
+        {
+            if (value < curr->data)
+                return find_impl(curr->left, value);
+            else
+                return find_impl(curr->right, value);
+        }
+    }
+
+    // 삭제
+    Node* erase_impl(Node* node, int value)
+    {
+        /*
+            10
+           5  14
+             12 16
+               15
+              
+        */
+
+        if (!node)
+            return nullptr;
+
+        if (value < node->data)
+            node->left = erase_impl(node->left, value);
+        else if (value > node->data)
+            node->right = erase_impl(node->right, value);
+        else
+        {
+            if (node->left && node->right)
+            {
+                // 자식 노드가 둘 다 있는 경우
+                auto succ = successor(node);
+                node->data = succ->data;
+                node->right = erase_impl(node->right, succ->data);
+            }
+            else
+            {   
+                auto tmp = node->left ? node->left : node->right;
+
+                delete node;
+                return tmp;
+            }
+        }
+
+        return node;
+    }
+
+    // 후속 노드 찾기 이해 완
+    Node* successor(Node* node)
+    {
+        auto curr = node->right;
+        while (curr && curr->left)
+        {
+            curr = curr->left;
+        }
+        return curr;
+    }
+
+    void inorder_impl(Node* curr)
+    {
+        if (curr)
+        {
+            inorder_impl(curr->left);
+            cout << curr->data << " ";
+            inorder_impl(curr->right);
+        }
+    }
+
+    void delete_node(Node* node)
+    {
+        if (node)
+        {
+            delete_node(node->left);
+            delete_node(node->right);
+            cout << node->data << " Delete" << endl;
+            delete node;
+        }
+    }
+};
+
+int main()
+{
+    BinarySearchTree bst;
+
+    bst.insert(10);
+    bst.insert(20);
+    bst.insert(5);
+    bst.insert(7);
+    bst.insert(8);
+
+    /*
+     10
+    5  20
+     7
+      8
+    */
+
+    if (bst.find(8))
+        cout << bst.find(8)->data << endl;
+    else
+        cout << "nullptr" << endl;
+
+    if (bst.find(999))
+        cout << bst.find(999) << endl;
+    else
+        cout << "nullptr" << endl;
+
+    bst.inorder();
+    cout << endl;
+
+    return 0;
+}
+```
+
+
+### 5. 이진 탐색 트리의 문제점
+- 원소의 사입 순서에 따라 이진 탐색 트리가 한쪽으로 치우친 형태로 구성될 수 있음
+- 트리가 한쪽으로 치우칠 경우 트리의 높이가 h = n - 1 형태로 구성되므로 탐색, 삽입, 삭제 연산의 시간 복잡도가 O(N)으로 결정됨
+
+- 5 3 7 2 4 9: h = 2 / n = 6
+- 2 3 4 5 7 9: 한쪽으로 치우쳐진 형태: h = 5 / n = 6
+
+
+### 6. 이진 탐색 트리의 문제점 해결 방법
+- 한쪽으로 치우친 트리의 구성을 변경하여 균형 잡힌 트리 형태로 변경할 수 있음
+    - **트리 회전**
+
+- 균형 잡힌 트리의 예
+    - AVL 트리, 레드 블랙 트리, B 트리, 스플레이트 트리 등 (본 강의에서 다루지는 않음)
+
+
+### 7. 추가 내용
+- Successor vs Predecessor
+    - 삭제 시 반드시 후속 노드를 사용해야하는 것은 아님
+    - 트리의 균형을 맞추기 위해 두 방식을 번갈아 가면서 사용하기도 함
