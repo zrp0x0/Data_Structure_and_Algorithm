@@ -590,10 +590,10 @@ int main()
     int main()
     {
         /*
-        A
-        B   C
+           A
+         B   C
         D E   F
-        G H   
+         G H   
         */
 
         Node* A = new Node('A');
