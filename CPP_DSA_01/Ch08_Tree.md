@@ -114,4 +114,509 @@
 
 
 ---
-# S02. 
+# S02. 이진 트리의 순회
+
+
+### 1. 트리 순회(traversal)
+- 정해진 순서에 의해 트리의 모든 노드를 한 번씩 방문하는 작업
+
+
+### 2. 전형적인 트리 순회 방법
+- 전위 순회(preorder traversal)
+- 중위 순회(inorder traversal)
+- 후위 순회(postorder traversal)
+- 레벨 순서 순회(level order traversal)
+
+- 전위 / 중위 / 후위: 깊이 우선 탐색(depth first traversal)
+- 레벨 순서: 너비 우선 탐색(breadth first traversal)
+
+
+### 3. 전위 순회(preorder traversal)
+- 1. 현재 노드(상위 노드)
+- 2. 왼쪽 **서브 트리**
+- 3. 오른쪽 **서브 트리**
+- 위 과정 반복
+
+```cpp
+void preorder(Node* node)
+{
+    if (node) // 기저 조건: node == nullptr;
+    {
+        std::cout << node->data << ", ";
+        preorder(node->left);
+        preorder(node->right);
+    }
+}
+```
+
+
+### 4. 중위 순회(inorder traversal)
+- 1. 왼쪽 **서브 트리**
+- 2. 현재 노드(상위 노드)
+- 3. 오른쪽 **서브 트리**
+- 위 과정 반복
+
+```cpp
+void inorder(Node* node)
+{
+    if (node) // 기저 조건: node == nullptr
+    {
+        inorder(node->left);
+        std::cout << node->data << ", ";
+        inorder(node->right);
+    }
+}
+```
+
+
+### 5. 후위 순회(postorder traversal)
+- 1. 왼쪽 **서브 트리**
+- 2. 오른쪽 **서브 트리**
+- 3. 현재 노드(상위 노드)
+- 위 과정 반복
+
+```cpp
+void postorder(Node* node)
+{
+    if (node)
+    {
+        postorder(node->left);
+        postorder(node->right);
+        std::cout << node->data << ", ";
+    }
+}
+```
+
+
+### 6. 레벨 순서 순회(level order traversal)
+- 낮은 레벨에 있는 노드를 모두 방문한 후, 큰 레벨로 이동하여 방문을 반복
+- **큐를 사용하여 구현**
+
+```cpp
+void levelorder(Node* node)
+{
+    std::queue<Node*> q;
+    q.push(node);
+
+    while (!q.empty())
+    {
+        auto curr = q.front();
+        q.pop();
+
+        std::cout << curr->data << ", ";
+        if (curr->left)
+            q.push(curr->left);
+
+        if (curr->right)
+            q.push(curr->right);
+    }
+}
+```
+
+
+### 7. 트리 순회 테스트 코드
+```cpp
+#include <iostream>
+#include <queue>
+
+using std::cout;
+using std::endl;
+using std::queue;
+
+struct Node
+{
+    char data;
+    Node* left;
+    Node* right;
+
+    Node(char data) : data(data), left(nullptr), right(nullptr) {}
+};
+
+
+void preorder(Node* node)
+{
+    if (node)
+    {
+        cout << node->data << " ";
+        preorder(node->left);
+        preorder(node->right);
+    }
+}
+
+void inorder(Node* node)
+{
+    if (node)
+    {
+        inorder(node->left);
+        cout << node->data << " ";
+        inorder(node->right);
+    }
+}
+
+void postorder(Node* node)
+{
+    if (node)
+    {
+        postorder(node->left);
+        postorder(node->right);
+        cout << node->data << " ";
+    }
+}
+
+void levelorder(Node* node)
+{
+    queue<Node*> q;
+    q.push(node);
+
+    while (!q.empty())
+    {
+        Node* curr = q.front();
+        q.pop();
+
+        cout << curr->data << " ";
+
+        if (curr->left)
+            q.push(curr->left);
+
+        if (curr->right)
+            q.push(curr->right);
+    }
+}
+
+
+int main()
+{
+    /*
+       A
+     B   C
+    D E   F
+    */
+
+    Node* A = new Node('A');
+    A->left = new Node('B');
+    A->right = new Node('C');
+    A->left->left = new Node('D');
+    A->left->right = new Node('E');
+    A->right->right = new Node('F');
+
+    preorder(A);
+    cout << endl;
+    inorder(A);
+    cout << endl;
+    postorder(A);
+    cout << endl;
+    levelorder(A);
+    cout << endl;
+
+    return 0;
+}
+```
+
+
+### 8. 이진 트리의 순회
+- 이진 트리 삭제하기
+    - 각각의 노드에서 왼쪽 자식 노드와 오른쪽 자식 노드를 먼저 삭제하고, 
+    - 자기 자신을 삭제하는 코드를 재귀적으로 수행
+
+    - 후위 순회 방식
+        - 1. 왼쪽 서브 트리 삭제
+        - 2. 오른쪽 서브 트리 삭제
+        - 3. 현재 노드(상위 노드) 삭제
+
+        ```cpp
+        void delete_tree(Node* node)
+        {
+            if (node)
+            {
+                delete_tree(node->left);
+                delete_tree(node->right);
+                delete node;
+            }
+        }
+        ```
+
+```cpp
+#include <iostream>
+#include <queue>
+
+using std::cout;
+using std::endl;
+using std::queue;
+
+struct Node
+{
+    char data;
+    Node* left;
+    Node* right;
+
+    Node(char data) : data(data), left(nullptr), right(nullptr) {}
+};
+
+
+void preorder(Node* node)
+{
+    if (node)
+    {
+        cout << node->data << " ";
+        preorder(node->left);
+        preorder(node->right);
+    }
+}
+
+void inorder(Node* node)
+{
+    if (node)
+    {
+        inorder(node->left);
+        cout << node->data << " ";
+        inorder(node->right);
+    }
+}
+
+void postorder(Node* node)
+{
+    if (node)
+    {
+        postorder(node->left);
+        postorder(node->right);
+        cout << node->data << " ";
+    }
+}
+
+void levelorder(Node* node)
+{
+    queue<Node*> q;
+    q.push(node);
+
+    while (!q.empty())
+    {
+        Node* curr = q.front();
+        q.pop();
+
+        cout << curr->data << " ";
+
+        if (curr->left)
+            q.push(curr->left);
+
+        if (curr->right)
+            q.push(curr->right);
+    }
+}
+
+void delete_tree(Node* node)
+{
+    if (node)
+    {
+        delete_tree(node->left);
+        delete_tree(node->right);
+        cout << "delete node " << node->data << endl;
+        delete node;
+    }
+}
+
+
+int main()
+{
+    /*
+       A
+     B   C
+    D E   F
+    */
+
+    Node* A = new Node('A');
+    A->left = new Node('B');
+    A->right = new Node('C');
+    A->left->left = new Node('D');
+    A->left->right = new Node('E');
+    A->right->right = new Node('F');
+
+    preorder(A);
+    cout << endl;
+    inorder(A);
+    cout << endl;
+    postorder(A);
+    cout << endl;
+    levelorder(A);
+    cout << endl;
+
+    delete_tree(A);
+
+    return 0;
+}
+```
+
+
+### 9. 추가 내용
+- 순회 방식별 응용
+    - 전위
+        - 트리의 복사, 트리 구조를 그대로 출력할 때 사용
+
+    - 중위
+        - 이진 탐색 트리에서 오름차순 데이터 추출
+
+    - 후위
+        - 트리 삭제, 디렉토리 용량 계산, 수식 트리 계산
+
+    - 레벨
+        - 최단 경로 탐색, 네트워크 라우티 분석
+
+- 알고리즘 복잡도 분석
+    - 시간 복잡도: O(N)
+    - 공간 복잡도:
+        - DFS: O(H): 트리의 높이
+        - BFS: O(W): 트리의 최대 너비
+
+- 수식 트리(Expression Tree)
+    - (A + B) * C
+    - 전위 표기법
+        - * + A B C
+
+    - 중위 표기법
+        - A + B * C
+
+    - 후위 표기법
+        - A B + C *
+
+- 재귀를 사용하지 않고 DFS 구현
+    - std::stack을 사용하여 직접 구현할 수 있음 (함수 호출 스택을 명시적 스택으로 대체)
+    ```cpp
+    #include <iostream>
+    #include <stack>
+
+    using std::cout;
+    using std::endl;
+    using std::stack;
+
+    struct Node
+    {
+        char data;
+        Node* left;
+        Node* right;
+
+        Node(char data) : data(data), left(nullptr), right(nullptr) {}
+    };
+
+    // void preorder(Node* node)
+    // {
+    //     if (node)
+    //     {
+    //         cout << node->data << " ";
+    //         preorder(node->left);
+    //         preorder(node->right);
+    //     }
+    // }
+
+    void preorder(Node* node)
+    {
+        stack<Node*> stk;
+        stk.push(node);
+
+        while (!stk.empty())
+        {
+            Node* curr = stk.top();
+            stk.pop();
+
+            cout << curr->data << " ";
+
+            if (curr->right)
+                stk.push(curr->right);
+            
+            if (curr->left)
+                stk.push(curr->left);
+        }
+    }
+
+    void inorder(Node* node)
+    {
+        stack<Node*> stk;
+        Node* curr = node;
+
+        while (curr != nullptr || !stk.empty())
+        {
+            while (curr != nullptr)
+            {
+                stk.push(curr);
+                curr = curr->left;
+            }
+            
+            curr = stk.top();
+            stk.pop();
+
+            cout << curr->data << " ";
+
+            curr = curr->right;
+        }
+    }
+
+    void postorder(Node* node)
+    {
+        stack<Node*> s1;
+        stack<Node*> s2;
+
+        s1.push(node);
+
+        while (!s1.empty())
+        {
+            Node* curr = s1.top();
+            s1.pop();
+            s2.push(curr);
+
+            if (curr->left)
+                s1.push(curr->left);
+
+            if (curr->right)
+                s1.push(curr->right);
+        }
+
+        while (!s2.empty())
+        {
+            cout << s2.top()->data << " ";
+            s2.pop();
+        }
+    }
+
+    void delete_tree(Node* node)
+    {
+        if (node)
+        {
+            delete_tree(node->left);
+            delete_tree(node->right);
+            cout << "delete node " << node->data << endl;
+            delete node;
+        }
+    }
+
+
+    int main()
+    {
+        /*
+        A
+        B   C
+        D E   F
+        G H   
+        */
+
+        Node* A = new Node('A');
+        A->left = new Node('B');
+        A->right = new Node('C');
+        A->left->left = new Node('D');
+        A->left->right = new Node('E');
+        A->right->right = new Node('F');
+
+        A->left->right->left = new Node('G');
+        A->left->right->right = new Node('H');
+
+        preorder(A);
+        cout << endl;
+
+        inorder(A);
+        cout << endl;
+
+        postorder(A);
+        cout << endl;
+
+        delete_tree(A);
+
+        return 0;
+    }
+    ```
