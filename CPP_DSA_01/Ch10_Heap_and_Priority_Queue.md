@@ -145,3 +145,179 @@ void heapify_up(int i)
     - 이진 힙은 자식이 2개 고정
     - 네트워크 라우팅이나 외부 메모리 알고리즘에서는 자식을 d개로 늘린 d-ary Heap 사용
         - 자식이 많아지면 트리 높이가 낮아져서 삽입 속도가 빨라지지만 삭제 시 자식들 비교하는 비용이 커짐
+
+
+
+
+---
+# S02. 힙 02
+
+
+### 1. 힙에서 원소 삭제
+- 힙의 맨 마지막 노드 값을 루트 노드로 복사하고 맨 마지막 노드를 삭제함
+- 루트 노드와 두 자식 노드를 비교하여 힙 속성을 만족하지 않으면 두 자식 노드 중에서 더 큰(최대 힙) 노드와 서로 교환함
+- 교환한 자식 노드에서 이 작업을 반복(heapify_down)
+
+```cpp
+void pop()
+{
+    vec[1] = vec.back();
+    vec.pop_back();
+    heapify_down(1);
+}
+
+void heapify_down(int i)
+{
+    int largest = i;
+
+    if (left(i) < vec.size() && vec[left(i)] > vec[largest])
+        largest = left(i);
+
+    if (right(i) < vec.size() && vec[right(i)] > vec[largest])
+        largest = right(i);
+
+    if (largest != i) // 변경이 된 경우를 말함
+    {
+        swap(vec[i], vec[largest]);
+        heapify_down(largest);
+    }
+}
+```
+
+
+### 2. Max Heap 구현 예제
+```cpp
+#include <algorithm>
+#include <iostream>
+#include <vector>
+
+using std::cout;
+using std::endl;
+using std::vector;
+
+class MaxHeap
+{
+private:
+	vector<int> vec;
+
+public:
+	MaxHeap() : vec(1) {}
+
+	void push(int value)
+	{
+		vec.push_back(value);
+		heapify_up(vec.size() - 1);
+	}
+
+	void pop()
+	{
+		vec[1] = vec.back();
+		vec.pop_back();
+		heapify_down(1);
+	}
+
+	int top() const { return vec[1]; }
+	void clear()
+	{
+		vec.clear();
+		vec.push_back(0);
+	}
+	int size() { return vec.size() - 1; }
+	bool empty() { return vec.size() == 1; }
+
+    void print()
+    {
+        for (int i = 1; i < vec.size(); i++)
+        {
+            cout << vec[i] << " ";
+        }
+        cout << endl;
+    }
+
+	void heapify_up(int i)
+	{
+		while (i > 1 && vec[i] > vec[parent(i)])
+		{
+			std::swap(vec[i], vec[parent(i)]);
+			i = parent(i);
+		}
+	}
+
+	void heapify_down(int i)
+	{
+		int largest = i;
+
+		if (left(i) < vec.size() && vec[left(i)] > vec[largest])
+			largest = left(i);
+
+		if (right(i) < vec.size() && vec[right(i)] > vec[largest])
+			largest = right(i);
+
+		if (largest != i)
+		{
+			std::swap(vec[i], vec[largest]);
+			heapify_down(largest);
+		}
+	}
+
+private:
+	int parent(int i)
+	{
+		return i / 2;
+	}
+
+	int left(int i)
+	{
+		return i * 2;
+	}
+
+	int right(int i)
+	{
+		return i * 2 + 1;
+	}
+};
+
+int main()
+{
+    MaxHeap heap;
+    heap.push(10);
+    heap.push(5);
+    heap.push(15);
+    heap.push(7);
+    heap.push(3);
+    heap.push(9);
+    heap.push(14);
+    heap.push(8);
+    heap.push(2);
+    heap.push(4);
+
+    heap.print();
+
+    while (!heap.empty())
+    {
+        cout << heap.top() << " ";
+        heap.pop();
+    }
+    cout << endl;
+
+	return 0;
+}
+```
+
+
+### 3. 추가 내용
+- C++ STL Heap (std::priority_queue)
+    - std::push_heap: 새로운 원소가 끝에 추가된 컨테이너를 힙으로 재정렬
+    - std::pop_heap: 루트를 끝으로 보내고 나머지로 힙 재건
+    - std::sort_heap: 힙을 정렬된 상태로 만듦
+
+- 힙 정렬
+    - 배열을 힙으로 변환
+    - 루트를 뒤로 보내기
+    - 남은 원소 힙 재건
+        - 시간 복잡도: O(NlogN): 최선, 평균, 최악
+            - 힙 빌드: O(N)
+            - heapify_down: O(log N)
+        - 공간 복잡도: O(1)
+
+    - **주로 최악의 시나리오**가 매우매우 중요한 시스템에서 사용함
