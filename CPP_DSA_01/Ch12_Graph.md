@@ -183,3 +183,290 @@ int main()
 - 암시적 그래프
     - 미로 찾기 문제에서 N*M 격자판 자체가 그래프 (상하좌우가 엣지)
     - 이럴 경우 굳이 리스트를 따로 만들지 않고 배열을 사용해 이동 가능한 정점을 계산함
+
+
+
+---
+# S02. 그래프 순회: DFS와 BFS
+
+
+### 1. 그래프 순회(graph traversal)
+- 하나의 정점에서 시작해서 모든 정점들을 한번씩 방문하는 작업
+- 많은 문제들이 그래프 순회를 이용하여 해결될 수 있음
+    - 두 정점 사이의 연결 경로가 있는지 검사, 최단 거리 검사 등
+
+- 대표적 그래프 순회 방법
+    - 깊이 우선 탐색(Depth First Search)
+    - 너비 우선 탐색(Breadth First Search)
+
+
+
+### 2. 깊이 우선 탐색
+- 현재 정점과 인접한 정점 중 하나를 선택해서 이동하는 과정을 반복하고,
+- 더 이상 이동할 정점이 없을 경우 뒤쪽으로 백트래킹(backtracking)하여 다시 이동할 경로를 탐색
+- 시작 정점으로부터 거리가 멀어지는(깊이가 깊어지는) 방식으로 정점을 탐색
+- 보통 재귀 또는 스택을 이용하여 구현
+- 보통 **재귀 또는 스택**을 이용하여 구현
+
+- ex. 0 - 1 - 2 - 5 - <2> - <1> - 4 - 3 / <>: 백트래킹
+
+- 한가지 방문 순서만 있는 것이 아님!!!
+
+
+### 3. 너비 우선 탐색
+- 현재 정점과 인접한 모든 정점을 방문한 후, 다시 이들 정점과 인접한 모든 정점을 찾아 방문하는 방식
+- 시작 정점으로부터 가까운 정점을 먼저 방문하고, 멀리 떨어져 있는 정점을 나중에 방문
+- 보통 **큐**를 이용하여 구현
+
+- ex. (0 - 1 - 3 - 4) - 2 - 5
+    - 0 - (1 3 4)
+    - 1 - (2 4)
+    - 2 - (5)
+
+
+### 4. DFS 구현하기 - 재귀 이용 방법
+```cpp
+const int N = 6;
+bool gVisited[N] = {};
+
+void dfs_recursion(const vector<vector<int>>& adj_list, int s)
+{
+    // 1. 이미 s를 방문했으면 함수 종료
+    if (gVisited[s])
+        return;
+
+    // 2. 그렇지 않으면 s를 방문
+    gVisited[s] = true;
+    cout << s << " ";
+
+    // 3. s와 인접한 모든 노드에 대해 dfs_recursion() 함수를 재귀 호출
+    for (int v : adj_list[s])
+        dfs_recursion(adj_list, v);
+}
+
+int main()
+{
+    vector<vector<int>> adj_list = { {1, 3, 4}, {0, 2, 4}, {1, 5}, {0, 4}, {0, 1, 2}, {2} }
+    dfs_recursion(adj_list, 0);
+    cout << endl;
+}
+```
+
+
+### 5. DFS 구현하기 - 스택 이용 방법
+```cpp
+vector<int> dfs(const vector<vector<int>>& adj_list, int s)
+{
+    vector<bool> visited(adj_list.size(), false); // 방문 여부 기록
+    vector<int> visit_order; // 각각의 정점 방문 순서를 기록
+
+    // 1. 비어 있는 스택을 생성하고 s를 삽입
+    stack<int> stk;
+    stk.push(s);
+
+    while (!stk.empty())
+    {
+        // 2. 스택에서 정점 번호를 꺼내서 변수 v로 설정
+        int v = stk.top();
+        stk.pop();
+
+        // 3. 이미 v를 방문했으면 스택의 다음 정점 번호를 꺼냄
+        if (visited[v])
+            continue;
+
+        // 4. 그렇지 않으면 v를 방문
+        visited[v] = true;
+        visit_order.push_back(v);
+
+        // 5. v와 인접한 노드 중에서 아직 방문하지 않은 정점 번호를 스택에 삽입
+        for (int a : adj_list[v])
+        {
+            if (!visited[a])
+                stk.push(a);
+        }
+    }
+
+    return visit_order;
+}
+```
+
+
+### 6. BFS 구현하기 - 큐 이용 방법
+```cpp
+vector<int> bfs(const vector<vector<int>>& adj_list, int s)
+{
+    vector<bool> visited(adj_list.size(), false); // 방문 여부 기록
+    vector<int> visit_order; // 각각의 정점 방문 순서를 기록
+
+    // 1. 비어 있는 스택을 생성하고 s를 삽입
+    queue<int> q;
+    q.push(s);
+
+    while (!q.empty())
+    {
+        // 2. 큐에서 정점 번호를 꺼내서 변수 v로 설정
+        int v = q.front();
+        q.pop();
+
+        // 3. 이미 v를 방문했으면 스택의 다음 정점 번호를 꺼냄
+        if (visited[v])
+            continue;
+
+        // 4. 그렇지 않으면 v를 방문
+        visited[v] = true;
+        visit_order.push_back(v);
+
+        // 5. v와 인접한 노드 중에서 아직 방문하지 않은 정점 번호를 스택에 삽입
+        for (int a : adj_list[v])
+        {
+            if (!visited[a])
+                q.push(a);
+        }
+    }
+
+    return visit_order;
+}
+```
+
+
+### 7. 전체 예제
+```cpp
+
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <queue>
+using namespace std;
+
+vector<int> dfs(const vector<vector<int>>& adj_list, int s)
+{
+    vector<bool> visited(adj_list.size(), false); // 방문 여부 기록
+    vector<int> visit_order; // 각각의 정점 방문 순서를 기록
+
+    // 1. 비어 있는 스택을 생성하고 s를 삽입
+    stack<int> stk;
+    stk.push(s);
+
+    while (!stk.empty())
+    {
+        // 2. 스택에서 정점 번호를 꺼내서 변수 v로 설정
+        int v = stk.top();
+        stk.pop();
+
+        // 3. 이미 v를 방문했으면 스택의 다음 정점 번호를 꺼냄
+        if (visited[v])
+            continue;
+
+        // 4. 그렇지 않으면 v를 방문
+        visited[v] = true;
+        visit_order.push_back(v);
+
+        // 5. v와 인접한 노드 중에서 아직 방문하지 않은 정점 번호를 스택에 삽입
+        for (int a : adj_list[v])
+        {
+            if (!visited[a])
+                stk.push(a);
+        }
+    }
+
+    return visit_order;
+}
+
+
+vector<int> bfs(const vector<vector<int>>& adj_list, int s)
+{
+    vector<bool> visited(adj_list.size(), false); // 방문 여부 기록
+    vector<int> visit_order; // 각각의 정점 방문 순서를 기록
+
+    // 1. 비어 있는 스택을 생성하고 s를 삽입
+    queue<int> q;
+    q.push(s);
+
+    while (!q.empty())
+    {
+        // 2. 큐에서 정점 번호를 꺼내서 변수 v로 설정
+        int v = q.front();
+        q.pop();
+
+        // 3. 이미 v를 방문했으면 스택의 다음 정점 번호를 꺼냄
+        if (visited[v])
+            continue;
+
+        // 4. 그렇지 않으면 v를 방문
+        visited[v] = true;
+        visit_order.push_back(v);
+
+        // 5. v와 인접한 노드 중에서 아직 방문하지 않은 정점 번호를 스택에 삽입
+        for (int a : adj_list[v])
+        {
+            if (!visited[a])
+                q.push(a);
+        }
+    }
+
+    return visit_order;
+}
+
+void print_vector(const vector<int>& v)
+{
+    for (int n : v)
+    {
+        cout << n << " ";
+    }
+    cout << endl;
+}
+
+int main()
+{
+    vector<vector<int>> adj_list = 
+    {
+        {1, 3, 4},
+        {0, 2, 4},
+        {1, 5},
+        {0, 4},
+        {0, 1, 3},
+        {2}
+    };
+
+    auto dfs_order = dfs(adj_list, 0);
+    auto bfs_order = bfs(adj_list, 0);
+
+    print_vector(dfs_order);
+    print_vector(bfs_order);
+
+    return 0;
+}
+```
+
+
+### 8. 추가 내용
+- BFS와 최단 거리
+    - BFS는 가중치가 없는 그래프에서 시작 정점과 특정 정점까지의 최단 경로를 보장함
+    - BFS는 가까운 곳부터 탐색하므로 처음 발견한 경로가 반드시 가장 짧은 경로임
+
+- 시간 복잡도
+    - DFS / BFS: O(V + E)
+    - 모든 정점을 한 번씩 방문하고, 각 정점에서 연결된 모든 간선을 확인하기 때문임
+
+- 효율적인 구현
+    - BFS
+    ```cpp
+    // 5. v와 인접한 노드 중에서 아직 방문하지 않은 정점 번호를 스택에 삽입
+        for (int a : adj_list[v])
+        {
+            if (!visited[a])
+            {
+                visited[a] = true;
+                q.push(a);
+            }
+        }
+    ```
+    - 꺼내는 시점에서 방문 처리를 하는 것이 메모리/시간적 이점
+
+- 항상 말하지만 재귀는 그래프 깊이가 깊어지면 사용하면 스택 오버플로우가 일어남
+
+- 사용처
+    - 최단 경로 찾기: BFS
+    - 경로의 특징을 저장해야할 때: DFS
+    - 그래프 규모가 매우 클 때: DFS
+    - 모든 정점 방문: 둘 다 무관 / DFS 구현이 쉬워 선호하는 편
