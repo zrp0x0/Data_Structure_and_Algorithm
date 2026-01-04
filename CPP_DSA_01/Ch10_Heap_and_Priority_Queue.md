@@ -321,3 +321,201 @@ int main()
         - 공간 복잡도: O(1)
 
     - **주로 최악의 시나리오**가 매우매우 중요한 시스템에서 사용함
+
+
+
+---
+# S03. 우선순위 큐와 std::priority_queue
+
+
+### 1. 우선순위 큐(priority queue)
+- 각각의 데이터에 우선순위(priority)가 정의되어 있어서, 입력 순서에 상관없이 우선순위가 가장 높은 데이터가 먼저 출력되는 형태의 자료 구조
+- 우선순위의 예: 응급 자동차, 네트워크 트래픽 우선 순위, 운영체제에서 프로그램 우선 순위
+- 일반 선입선출 큐: 큐에 머무른 시간을 우선순위로 설정하면 일반 큐와 같이 동작
+
+
+### 2. 우선순위 큐 구현 방법
+- 순서 없는 배열
+    - 삽입: O(1)
+    - 삭제: O(n)
+
+- 순서 없는 연결 리스트
+    - 삽입: O(1)
+    - 삭제: O(n)
+
+- 정렬된 배열
+    - 삽입: O(n)
+    - 삭제: O(1)
+
+- 정렬된 연결 리스트
+    - 삽입: O(n)
+    - 삭제: O(1)
+
+- 힙
+    - 삽입: O(log N)
+    - 삭제: O(log N)
+
+- STL에서 제공하는 std::priority_queue 컨테이너 사용
+
+
+### 3. std::priority_queue
+```cpp
+template<class template
+    class Container = std::vector<T>,
+    class Compare = std::less<T>>
+class priority_queue
+```
+
+- 우선순위 큐의 기능을 제공하는 **컨테이너 어댑터**
+- 삽입 순서에 상관없이 우선순위가 가장 높은 큰(기본적으로 값이 가장 큰) 원소가 먼저 출력됨
+- 사용자 정의 타입을 저장할 경우, **비교 연산**을 지원해야 함
+- <queue>에 정의되어 있음
+- 주요 멤버 함수
+    - push(e): e를 추가 O(log N)
+    - pop(): 최상위 원소를 제거 O(log N)
+    - top(): 최상위 원소를 참조 O(1)
+
+
+### 4. std::priority_queue 사용 예제
+```cpp
+#include <iostream>
+#include <queue>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+template <typename T>
+void print_queue(T q)
+{
+    while (!q.empty())
+    {
+        cout << q.top() << " ";
+        q.pop();
+    }
+    cout << endl;
+}
+
+int main()
+{
+    vector<int> vec {4, 2, 3, 5, 1};
+    priority_queue<int> pq1;
+    for (int n : vec)
+    {
+        pq1.push(n);
+    }
+    print_queue(pq1);
+
+    priority_queue<int, vector<int>, greater<int>> pq2(vec.begin(), vec.end());
+    print_queue(pq2);
+
+    return 0;
+}
+```
+
+```cpp
+#include <iostream>
+#include <queue>
+#include <string>
+
+using namespace std;
+
+struct Student 
+{
+    Student(string name, int score) : name(name), score(score) {}
+
+    string name;
+    int score;
+
+    bool operator<(const Student& st) const
+    {
+        return this->score < st.score;
+    }
+};
+
+int main()
+{
+    priority_queue<Student> students;
+    students.push(Student("Amelia", 80));
+    students.push(Student("Sophia", 40));
+    students.push(Student("Olivia", 90));
+    students.push(Student("George", 70));
+
+    while (!students.empty())
+    {
+        auto& s = students.top();
+        cout << s.name << " " << s.score << endl;
+        students.pop();
+    }
+
+    return 0;
+}
+```
+
+```cpp
+#include <iostream>
+#include <queue>
+#include <string>
+
+using namespace std;
+
+struct Student 
+{
+    Student(string name, int score) : name(name), score(score) {}
+
+    string name;
+    int score;
+
+    bool operator<(const Student& st) const
+    {
+        return this->score < st.score;
+    }
+    
+    bool operator>(const Student& st) const
+    {
+        return this->score > st.score;
+    }
+};
+
+int main()
+{
+    auto cmp = [](const Student& s1, const Student& s2)
+    {
+        return s1 > s2;
+    };
+
+    priority_queue<Student, vector<Student>, decltype(cmp)> students(cmp);
+    students.push(Student("Amelia", 80));
+    students.push(Student("Sophia", 40));
+    students.push(Student("Olivia", 90));
+    students.push(Student("George", 70));
+
+    while (!students.empty())
+    {
+        auto& s = students.top();
+        cout << s.name << " " << s.score << endl;
+        students.pop();
+    }
+
+    return 0;
+}
+```
+
+
+### 5. 추가 내용
+- 질문
+    - 순서 없는 배열
+    - 정렬된 배열이 무슨말?
+
+    - 왜 less가 기본값인데 큰 순서대로 나오는거지?
+
+    - 우선순위 큐를 사용하는 목적 이유?
+        - 정렬을 하면 되지 않나?
+        - 정렬된 배열을 사용는거랑 무슨 상관이 있지?    
+        - 시간 복잡도 사용이랑 
+        - 보통 어느 때 사용을 하는지
+
+    - Compare에는 람다를 써도 되는 건가? 함수 포인터도?
+
+    - pq<int, vector<int>, > 
+        - 여기서 int랑 vector<int>가 무엇을 의미하는 걸까?
+        - 굳이 명시를 해야하는가?
