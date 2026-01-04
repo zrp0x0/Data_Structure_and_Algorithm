@@ -470,3 +470,114 @@ int main()
     - 경로의 특징을 저장해야할 때: DFS
     - 그래프 규모가 매우 클 때: DFS
     - 모든 정점 방문: 둘 다 무관 / DFS 구현이 쉬워 선호하는 편
+
+
+
+
+---
+# S03. 그래프 순회 응용: 네트워크
+
+
+### 1. 네트워크 문제풀이
+```cpp
+#include <string>
+#include <vector>
+#include <stack>
+#include <iostream>
+
+using namespace std;
+
+int solution(int n, vector<vector<int>> computers) 
+{
+    int answer = 0;
+
+    vector<bool> visited(n, false);
+
+    for (int i = 0; i < n; i++)
+    {
+        if (visited[i]) 
+            continue;
+
+        answer++;
+        stack<int> stk;
+        stk.push(i);
+        visited[i] = true;
+
+        while (!stk.empty())
+        {
+            int curr = stk.top();
+            stk.pop();
+
+            for (int next = 0; next < n; next++)
+            {
+                if (computers[curr][next] == 1 && !visited[next])
+                {
+                    stk.push(next);
+                    visited[next] = true;
+                }
+            }
+        }
+    }
+       
+    return answer;
+}
+
+int main()
+{
+    cout << solution(3, {{1, 1, 0}, {1, 1, 0}, {0, 0, 1}}) << '\n';
+
+    return 0;
+}
+```
+
+
+```cpp
+#include <string>
+#include <vector>
+#include <queue>
+#include <iostream>
+
+using namespace std;
+
+int solution(int n, vector<vector<int>> computers) 
+{
+    int answer = 0;
+    vector<bool> visited(n, false);
+
+    for (int i = 0; i < n; i++)
+    {
+        if (visited[i]) continue;
+
+        // 새로운 네트워크 발견
+        answer++; 
+        queue<int> q;
+        q.push(i);
+        visited[i] = true; // 시작 노드 방문 처리
+
+        while (!q.empty())
+        {
+            int v = q.front();
+            q.pop();
+
+            for (int j = 0; j < n; j++)
+            {
+                // 연결되어 있고 방문하지 않았다면
+                if (computers[v][j] == 1 && !visited[j])
+                {
+                    visited[j] = true; // 큐에 넣기 전 방문 처리
+                    q.push(j);
+                }
+            }
+        }
+    }
+    return answer;
+}
+
+int main()
+{
+    cout << solution(3, {{1, 1, 0}, {1, 1, 0}, {0, 0, 1}}) << '\n';
+    cout << solution(3, {{1, 1, 0}, {1, 1, 1}, {0, 1, 1}}) << '\n';
+
+    return 0;
+}
+```
