@@ -437,4 +437,178 @@ int main()
     - **따라서 실제 실행 속도에 차이가 있을 수 있음**
 
 
+
+---
+# S03. std::unordered_set과 std::unordered_map
+
+
+
+### 1. 순서 없는 연관 컨테이너
+- unordered_set / unordered_multiset
+- unordered_map / unordered_multimap
+
+
+### 2. std::unordered_set
+```cpp
+template<class Key,
+         class Hash = std::hash<Key>, // 해시 함수 객체
+         class KeyEqual = std::equal_to<Key>, // 사용자 정의 타입을 사용하고 싶을 때 함수 객체 / == 연산자 오버로딩 
+         class Allocator = std::allocator<Key>>
+class unordered_set;
+```
+
+- Key 타입의 키 값을 저장하는 순서 없는 연관 컨테이너
+- 만약 중복되는 데이터를 저장하고 싶으면 unordered_multiset 사용
+- 사용자 정의 타입을 저장할 경우, 해시 함수 Hash와 비교를 위한 KeyEqual을 지정해야함
+- <unordered_set>에 저장되어 있음
+- 주요 함수 사용법은 std::set과 거의 유사함
+
+
+### 3. std::unordered_set 사용예제
+```cpp
+#include <iostream>
+#include <string>
+#include <vector>
+#include <unordered_set>
+
+using namespace std;
+
+int main()
+{
+    // 끝말잇기 게임
+    // - 현재 사람이 중복된 단어를 말했는지 확인
+    // - car - radio - orange - ear - <radio>
+    unordered_set<string> words;
     
+    words.insert("car");
+    words.insert("radio");
+    words.insert("orange");
+    words.insert("ear");
+
+    string word = "radio";
+    if (words.find(word) != words.end())
+    {
+        cout << word << " is usesd" << endl;
+    }
+    else
+    {
+        cout << word << "is Not used!" << endl;
+    }
+
+
+    // 중복되는 숫자 카운트
+    vector<int> numbers {1, 5, 3, 1, 5, 7, 4, 5, 6, 3, 2, 7, 3, 6, 2};
+    unordered_set<int> num_set(numbers.begin(), numbers.end());
+    cout << num_set.size() << endl; // 7 (7개 숫자만 나타남)
+
+    
+    return 0;
+}
+```
+
+
+### 4. std::unordered_map
+```cpp
+template <class Key, class T,
+          class Hash = std::hash<Key>,
+          class KeyEqual = std::equal_to<Key>,
+          class Allocator = std::allocator<std::pair<const Key, T>>>
+class unordered_map;
+```
+
+- Key 타입의 키와 T 타입의 값의 쌍을 저장하는 순서없는 연관 컨테이너
+- 데이터 삽입, 삭제, 탐색은 O(1) 시간 복잡도로 동작해야함
+- 만약 중복되는 데이터를 unordered_map 구조로 저장하려면 unordered_multimap 사용
+- 사용자 정의 타입을 저장할 경우, 해시 함수 Hash와 비교를 위한 KeyEqual 지정해야함
+- <unordered_map>에 정의되어 있음
+- 주요 함수 사용법은 std::map과 거의 유사함
+
+
+### 5. std::unordered_map 사용 예제
+```cpp
+#include <iostream>
+#include <string>
+#include <unordered_map>
+
+using namespace std;
+
+int main()
+{
+    unordered_map<string, int> fruits;
+    fruits.insert({"Apple", 1000});
+    fruits.insert(make_pair("Banana", 1500));
+    cout << fruits["Apple"] << endl; // Key에 해당하는 Value로 치환됨
+    fruits["orange"]; // orange라는 Key가 생성되고 기본 생성자로 초기화됨
+    fruits["orange"] = 3000; // 변경도 가능
+
+    for (const auto& p : fruits)
+    {
+        cout << p.first << " is " << p.second << " won." << endl;
+    }
+
+    if (fruits.find("Apple") != fruits.end())
+    {
+        cout << "Found" << endl;
+    }
+    else
+    {
+        cout << "Not Found" << endl;
+    }
+
+    if (fruits.find("Appl") != fruits.end())
+    {
+        cout << "Found" << endl;
+    }
+    else
+    {
+        cout << "Not Found" << endl;
+    }
+
+    fruits.erase("Apple");
+    for (const auto& p : fruits)
+    {
+        cout << p.first << " is " << p.second << " won." << endl;
+    }
+
+    for (auto [name, price] : fruits) // auto 및 구조적 바인딩 C++ 17부터 지원
+    {
+        cout << name << " is " << price << "won." << endl; 
+    }
+
+    return 0;
+}   
+```
+
+
+### 6. 추가 내용
+- 순회 시 주의
+    - 출력 순서가 보장되지 않음
+
+- 사용자 정의 타입 사용법
+```cpp
+struct Point {
+    int x, y;
+    bool operator==(const Point& other) const { // KeyEqual 역할
+        return x == other.x && y == other.y;
+    }
+};
+
+// 해시 함수 객체 정의
+struct PointHash {
+    size_t operator()(const Point& p) const {
+        return std::hash<int>()(p.x) ^ (std::hash<int>()(p.y) << 1);
+    }
+};
+
+// 사용 시
+std::unordered_set<Point, PointHash> point_set;
+```
+
+- std::map vs std::unordered_map
+    - 순서: 키 기준 정렬 / 정렬되지 않음
+    - 탐색 속도: O(log N) / 평균 O(1)
+    - 데이터 양: 데이터가 적을 때 효율적 / 많을수록 유리
+    - 범위 쿼리: lower_bound 등 지원 / 지원하지 않음
+
+- reserve(n)
+    - 삽입할 데이터의 양을 미리 안다면, 미리 버킷 공간을 확보하여 재해싱 오버헤드를 피할 수 있음
