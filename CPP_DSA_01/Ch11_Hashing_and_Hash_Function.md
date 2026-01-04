@@ -196,4 +196,245 @@ int main()
 
 
 
-### 1. 
+### 1. 충돌(collision)
+- 해시 함수가 서로 다른 키에 대해 같은 해시 값을 반환함으로써, 해시 테이블에서 두 개 이상의 데이터가 같은 위치에 저장되려는 현상
+- 해시 테이블의 크기가 저장할 데이터의 개수보다 작으면 반드시 충돌이 발생
+- 해시 테이블의 크기가 저장할 데이터의 개수보다 크더라도 해시 함수의 동작에 따라 충돌이 발생할 수 있음
+
+
+### 2. 대표적인 충돌 처리 기법
+- 체이닝(chaining)
+- 오픈 어드레싱(open addressing)
+- 뻐꾸기 해싱(cuckoo hashing)
+
+
+### 3. 체이닝(chaining)
+- 해시 테이블의 특정 위치에서 하나의 키를 저장하는 것이 아니라 하나의 연결 리스트를 저장하는 기법
+- 개별 체이닝(seperate chaining)
+- 새로 삽입된 키에 의해 충돌이 발생하면 리스트에 새로운 키를 추가
+
+```cpp
+hash(X) = X % 7
+hash_set num_set(7);
+num_set.insert(10);
+num_set.insert(20);
+num_set.insert(27); // 20 - 27
+```
+
+- 단일 연결 리스트 사용시 앞에 저장 / 이중 연결 리스트 사용시 뒤에 저장해도 됨
+- 해시 맵을 사용할 경우, (key, value)를 저장
+
+
+### 4. 체이닝 특징
+- 삽입 연산은 O(1)의 시간 복잡도로 동작
+- (최악의 경우)모든 데이터가 같은 해시 값을 가질 경우, 탐색 연산은 O(N)의 시간 복잡도로 동작
+- 삭제 연산의 경우, 먼저 탐색을 수행하므로 최악의 경우 O(N)의 시간 복잡도로 동작
+- **해시 값이 중복되는 충돌을 최대한 방지할 수 있도록 해야함**
+
+
+### 5. 부하율과 재해싱
+- 부하율(load factor): 해시 테이블에서 각각의 리스트에 저장되는 키의 평균 개수. 적재율
+    - a = n / m
+        - n: 해시 테이블에 저장할 전체 키의 개
+        - m: 해시 테이블 크기 (연결 리스트 개수)
+        - 체이닝에서 부하율이 1을 넘는다는 것은 한 버킷에 여러 개의 노드가 달려있다는 뜻
+        - 단순히 부하율만 보면 안됨. 하나의 버킷에 모든 데이터가 다 달려있을 수도 있음
+        - 빈 버킷의 비율, 최대 체인 길이 등을 보고 해시 함수나, 리해싱을 고려해야함
+
+- 부하율이 1보다 작으면 메모리의 낭비가 될 수 있고, 1보다 크면 탐색, 삭제 연산이 느리게 동작할 수 있음
+    - 재해싱(rehashing)을 통해 부하율이 1에 가까운 값이 되도록 조정
+    - 테이블의 크기를 키우는 동작
+    - 모든 데이터를 다시 옮겨야하므로 O(N)의 시간이 걸리는 무거운 작업
+    - 하지만 보통 아주 가끔 발생하므로 평균(Amortized) 시간 복잡도는 여전히 O(1)으로 유지됨
+
+
+### 6. 체이닝을 구현한 해싱 클래스
+```cpp
+class hash_set
+{
+private:
+    int sz;
+    std::vector<std::list<int>> data;
+
+public:
+    hash_set(int n) : size(n), data(sz) {}
+
+    int hash(int key) { return key % sz; }
+
+    void insert(int value)
+    {
+        data[hash[value]].push_back(value);
+    }
+
+    bool find(int value)
+    {
+        auto& entries = data[hash(value)]; // 리스트를 반환
+        return std::find(entries.begin(), entries.end(), value) != entries.end();
+    }
+
+    void erase(int value)
+    {
+        auto& entries = data[hash(value)];
+        auto it = std::find(entires.begin(), entries.end(), value);
+
+        if (it != entries.end())
+            entries.erase(it);
+    }
+}
+```
+
+
+### 7. 체이닝을 구현한 해싱 클래스 예제 코드
+```cpp
+#include <iostream>
+#include <list>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+class hash_set
+{
+public:
+    hash_set(int size) : sz(size), data(sz) {}
+
+    int hash(int key)
+    {
+        return key % sz;
+    }
+
+    void insert(int value)
+    {
+        if (find(value)) return; // 이미 있으면 무시
+        data[hash(value)].push_back(value);
+    }
+
+    bool find(int value)
+    {
+
+        const auto& lst = data[hash(value)];
+
+        return std::find(lst.begin(), lst.end(), value) != lst.end();
+    }
+
+    void erase(int value)
+    {
+        auto& lst = data[hash(value)];
+        const auto& it = std::find(lst.begin(), lst.end(), value);
+
+        if (it != lst.end())
+            lst.erase(it);
+    }
+
+    void print() const
+    {
+        // int count = 0;
+        // for (const auto& lst : data)
+        // {
+        //     cout << count << " : ";
+        //     print_lst(lst); 
+        //     count++;
+        // }
+
+        for (int i = 0; i < sz; i++)
+        {
+            cout << i << " : ";
+            for (const auto& n : data[i])
+            {
+                cout << n << " ";
+            }
+            cout << endl;
+        }
+    }
+ 
+    void print_lst(const list<int>& lst) const
+    {
+        for (const auto& n : lst)
+        {
+            cout << n << " ";
+        }
+        cout << endl;
+    }
+
+private:
+    int sz;
+    vector<list<int>> data;
+};
+
+int main()
+{
+    hash_set num_set(7);
+
+    num_set.insert(10);
+    num_set.insert(2);
+    num_set.insert(16);
+    num_set.insert(20);
+    num_set.insert(27);
+    num_set.insert(34);
+
+    num_set.print();
+
+    if (num_set.find(34))
+    {
+        cout << "Found" << endl;
+    }
+    else
+    {
+        cout << "Not Found" << endl;
+    }
+
+    num_set.erase(34);
+
+    num_set.print();
+
+    return 0;
+}
+```
+
+
+### 8. 오픈 어드레싱(open addressing)
+- 해시 충돌이 발생할 경우, 해시 테이블에서 다른 비어 있는 버킷을 찾아 데이터를 저장하는 방식. 열린 주소 지정
+- 해시 테이블의 크기가 데이터 개수보다 커야함
+- 새로운 위치 탐사(probing) 방식
+    - 선형 탐사(linear probing)
+    - 제곱 탐사(quadratic probing)
+    - 이중 해싱(double hashing)
+
+- 하상 O(1)일까? 여기에는 조건이 필요함
+    - 부하율이 낮게 유지(0.7 이하)
+    - 해시 함수가 데이터를 균일하게 뿌려주오 클러스터링을 최소화해야 한다는 전제가 필수적임
+
+
+### 9. 선형 탐사(linear probing)
+- 특정 해시 값에서 충돌이 발생하면 해당 위치에서 하나씩 다음 위치로 이동하면서 비어 있는 위치에 원소를 삽입
+- 즉, h(key)가 사용중이라면 h(key) + 1, h(key) + 2, 순서로 빈 위치를 찾음
+- 데이터가 특정 위치에 군집화(clustering)되는 경우, 해싱 효율이 떨어질 수 있음
+
+
+### 10. 오픈 어드레싱: 제곱 탐사(quadratic probing)
+- 고정 크리고 이동하는 선형 탐사와 달리 제곱수 크기로 이동하면서 비어 있는 위치를 찾는 방식
+- 즉, h(key)가 사용중이라면 h(key) + 1^2, h(key) + 2^2, 순서로 빈 위치를 찾음
+- 군집화를 피하기 위해 간격을 두고 데이터를 삽입하는 방식
+
+- **C++ GCC는 chaining을 사용함!!**
+
+
+### 11. 추가 내용
+- 오픈 어드레싱 나머지 연산
+    - index = hash % size;
+    - index = hash & (size - 1);
+
+
+- 오픈 어드레싱의 삭제 연산
+    - 만약 A, B가 동일한 해시값을 가지게 되어 A는 3, B는 4에 저장
+    - A를 삭제한 후 B를 검색하려고 하면 일단 3을 먼저 봄
+    - 근데 데이터가 없으면, 데이터가 없다고 판단하고 탐색 종료
+        - 이를 방지하기 위해 더미 값을 넣음
+
+- 캐시 지역성
+    - 체이닝: 리스트 노드들이 메모리 여기저기 흩어져 있어 CPU 캐시 효율이 낮음
+    - 오픈 어드레싱: 모든 데이터가 배열에 붙어 있어 CPU 캐시 효율이 높음
+    - **따라서 실제 실행 속도에 차이가 있을 수 있음**
+
+
+    
